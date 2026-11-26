@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NXL OFC SUPREME DASHBOARD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #030307;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Welcome Splash Screen Animation Overlay */
+        .splash-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #030307;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .splash-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-logo-box {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .splash-ring {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 3px dashed #ff0080;
+            animation: spinRing 10s linear infinite;
+            box-shadow: 0 0 30px #ff0080;
+        }
+
+        .splash-img {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 20px #00f3ff;
+        }
+
+        .splash-title {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 20px #ff0080;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .splash-subtitle {
+            font-size: 11px;
+            color: #00f3ff;
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            padding-bottom: 90px;
+        }
+
+        /* Top Header & Menu Button */
+        .header-nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .nav-btn {
+            background: rgba(15, 12, 35, 0.85);
+            border: 1px solid rgba(255, 0, 128, 0.4);
+            border-radius: 12px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.15);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            border-color: #ff0080;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+        }
+
+        .nav-btn i {
+            color: #ff0080;
+            font-size: 14px;
+        }
+
+        /* Slide-Down App Menu Drawer */
+        .app-menu-drawer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 7, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-menu-drawer.open {
+            transform: translateY(0);
+        }
+
+        .drawer-header {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 0, 128, 0.3);
+            padding-bottom: 15px;
+        }
+
+        .drawer-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: #ff0080;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-drawer-btn {
+            background: rgba(255, 0, 128, 0.2);
+            border: 1px solid #ff0080;
+            border-radius: 50%;
+            width: 36px; height: 36px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .close-drawer-btn:hover {
+            background: #ff0080;
+            box-shadow: 0 0 15px #ff0080;
+        }
+
+        .drawer-content {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-bottom: 40px;
+        }
+
+        .menu-card {
+            background: rgba(15, 12, 30, 0.85);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .menu-card:hover {
+            border-color: #00f3ff;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .menu-card i {
+            font-size: 24px;
+            color: #ff0080;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .menu-card-info h4 {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 3px;
+            color: #fff;
+        }
+
+        .menu-card-info p {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Logo Card */
+        .logo-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 5px auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-ring {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 0, 128, 0.6);
+            animation: spinRing 16s linear infinite;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+        }
+
+        .logo-ring-outer {
+            position: absolute;
+            width: 130px; height: 130px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 51, 153, 0.4);
+            animation: spinRingReverse 22s linear infinite;
+        }
+
+        @keyframes spinRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinRingReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .logo-img {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ff0080;
+            box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+            z-index: 2;
+        }
+
+        /* Title Branding */
+        .brand-title {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+            background: linear-gradient(135deg, #fff 30%, #ff0080 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(255, 0, 128, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .brand-subtitle {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Page Switcher Tabs */
+        .page-tabs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(15, 12, 30, 0.8);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 0, 128, 0.15);
+            border-color: #ff0080;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+        }
+
+        .page-section {
+            width: 100%;
+            display: none;
+        }
+
+        .page-section.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Verification Header Box */
+        .verification-header {
+            width: 100%;
+            background: rgba(10, 8, 25, 0.85);
+            border: 1px solid rgba(255, 0, 128, 0.4);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 0, 128, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-label {
+            width: 100%;
+            font-size: 11px;
+            color: #ff3399;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .servers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .server-card {
+            background: rgba(15, 12, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 14px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        .server-card.active {
+            border-color: #ff0080;
+            background: rgba(255, 0, 128, 0.12);
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .server-icon {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .server-card.active .server-icon {
+            color: #ff0080;
+            text-shadow: 0 0 10px #ff0080;
+        }
+
+        .server-name {
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .server-status {
+            font-size: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .server-card.active .server-status {
+            color: #ff3399;
+        }
+
+        /* Feature Modules Grid (10+ Functions) */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .feature-box {
+            background: rgba(12, 10, 25, 0.75);
+            border: 1px solid rgba(255, 0, 128, 0.25);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feature-box:hover {
+            border-color: #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            background: rgba(0, 243, 255, 0.08);
+        }
+
+        .feature-box i {
+            font-size: 18px;
+            color: #ff0080;
+        }
+
+        .feature-info h4 {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .feature-info p {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Generate Key Button */
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff0080 0%, #7000ff 100%);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.5);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(255, 0, 128, 0.8);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress Bar Animation Container */
+        .progress-container {
+            width: 100%;
+            background: rgba(15, 12, 30, 0.9);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            font-family: 'Share Tech Mono', monospace;
+            color: #ff66b2;
+            margin-bottom: 6px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff0080, #00f3ff);
+            transition: width 0.1s linear;
+        }
+
+        /* Hacker Terminal */
+        .terminal-container {
+            width: 100%;
+            background: rgba(5, 4, 12, 0.9);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 14px;
+            padding: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .terminal-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .terminal-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-logs {
+            height: 90px;
+            overflow-y: auto;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #ff66b2;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .terminal-logs::-webkit-scrollbar { width: 3px; }
+        .terminal-logs::-webkit-scrollbar-thumb { background: rgba(255, 0, 128, 0.4); border-radius: 3px; }
+
+        .log-line.success { color: #27c93f; }
+        .log-line.warn { color: #ffbd2e; }
+        .log-line.error { color: #ff5f56; }
+
+        /* Security Log Bar & Copyright */
+        .security-footer-bar {
+            width: 100%;
+            background: rgba(10, 8, 20, 0.85);
+            border: 1px solid rgba(255, 0, 128, 0.25);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 12px;
+        }
+
+        .sec-status { color: #27c93f; display: flex; align-items: center; gap: 6px; }
+
+        .copyright-tag {
+            font-size: 9px;
+            font-family: 'Share Tech Mono', monospace;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Sound Toggle Floating Button */
+        .sound-toggle-btn {
+            position: fixed;
+            bottom: 20px; right: 20px;
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #ff0080, #7000ff);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px;
+            box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+            cursor: pointer;
+            z-index: 1000;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle-btn:hover { transform: scale(1.1); }
+        .sound-toggle-btn.muted { background: rgba(20, 20, 30, 0.9); color: rgba(255, 255, 255, 0.4); box-shadow: none; }
+
+        /* Notification Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 7, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 4000;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .modal-card {
+            background: rgba(15, 12, 30, 0.95);
+            border: 1px solid #ff0080;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%; max-width: 340px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 0, 128, 0.4);
+        }
+
+        .modal-card i { font-size: 36px; color: #ff0080; margin-bottom: 12px; }
+        .modal-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+        .modal-card p {
+            font-size: 11px; color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px; font-family: 'Share Tech Mono', monospace;
+            word-break: break-all; white-space: pre-line; max-height: 180px; overflow-y: auto; text-align: left;
+            background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
+        }
+
+        .modal-btn-group { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; background: linear-gradient(135deg, #ff0080, #7000ff);
+            border: none; border-radius: 10px; padding: 10px; color: #fff;
+            font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+        .modal-btn.secondary { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <!-- Welcome Splash Screen Overlay -->
+    <div class="splash-overlay" id="splashScreen">
+        <div class="splash-logo-box">
+            <div class="splash-ring"></div>
+            <img src="https://i.postimg.cc/QtC1tQMY/drawable-7f07009c.png" alt="Logo" class="splash-img">
+        </div>
+        <h2 class="splash-title">WELCOME PROFESSOR</h2>
+        <div class="splash-subtitle">INITIALIZING NXL SECURE KERNEL...</div>
+    </div>
+
+    <!-- Clean 3D Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <!-- Top Nav -->
+        <div class="header-nav">
+            <div class="nav-btn" onclick="toggleAppMenu()">
+                <i class="fa-solid fa-bars"></i> MENU
+            </div>
+            <a href="https://t.me/NXL_TEAMV1" target="_blank" class="nav-btn">
+                <i class="fa-solid fa-users"></i> JOIN CHANNEL
+            </a>
+        </div>
+
+        <!-- Custom Logo Card -->
+        <div class="logo-container">
+            <div class="logo-ring-outer"></div>
+            <div class="logo-ring"></div>
+            <img src="https://i.postimg.cc/QtC1tQMY/drawable-7f07009c.png" alt="NXL OFC Logo" class="logo-img">
+        </div>
+
+        <!-- Branding Title -->
+        <h1 class="brand-title">NXL OFC</h1>
+        <div class="brand-subtitle">Supreme Control Panel</div>
+
+        <!-- Page Switcher Tabs -->
+        <div class="page-tabs">
+            <button class="tab-btn active" id="tabGenerator" onclick="switchPage('generator')">
+                <i class="fa-solid fa-key"></i> GENERATOR
+            </button>
+            <button class="tab-btn" id="tabTools" onclick="switchPage('tools')">
+                <i class="fa-solid fa-toolbox"></i> PRO TOOLS (10+)
+            </button>
+        </div>
+
+        <!-- PAGE 1: KEY GENERATOR SECTION -->
+        <div class="page-section active" id="pageGenerator">
+            <div class="verification-header">
+                <div style="font-size: 13px; color: #ff0080; font-weight: 800; margin-bottom: 4px;">
+                    <i class="fa-solid fa-shield-halved"></i> FIREBASE userinfo LINKED
+                </div>
+                <div style="font-size: 9px; color: rgba(255,255,255,0.7); font-family: 'Share Tech Mono', monospace;">
+                    > Database: fixhtml-90816 (100% Handshake Active)
+                </div>
+            </div>
+
+            <div class="section-label">
+                <i class="fa-solid fa-server"></i> Select Authorization Server
+            </div>
+            <div class="servers-grid">
+                <div class="server-card active" onclick="selectServer(this, 'Server 1')">
+                    <i class="fa-solid fa-bolt server-icon"></i>
+                    <div class="server-name">SRV 1</div>
+                    <div class="server-status">ULTRA FAST</div>
+                </div>
+                <div class="server-card" onclick="selectServer(this, 'Server 2')">
+                    <i class="fa-solid fa-scale-balanced server-icon"></i>
+                    <div class="server-name">SRV 2</div>
+                    <div class="server-status">STABLE</div>
+                </div>
+                <div class="server-card" onclick="selectServer(this, 'Server 3')">
+                    <i class="fa-solid fa-shield server-icon"></i>
+                    <div class="server-name">SRV 3</div>
+                    <div class="server-status">SECURE</div>
+                </div>
+            </div>
+
+            <!-- Generate Key Button -->
+            <button class="generate-btn" id="generateBtn" onclick="startKeyGeneration()">
+                <i class="fa-solid fa-key"></i> GENERATE APK ACCESS KEY
+            </button>
+
+            <!-- Generation Progress Animation Box -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-header">
+                    <span id="progressText">SYNCING TO userinfo NODE...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: ADVANCED TOOLS SECTION (10+ FUNCTIONS) -->
+        <div class="page-section" id="pageTools">
+            <div class="section-label">
+                <i class="fa-solid fa-cogs"></i> System Utilities & Management
+            </div>
+            <div class="features-grid">
+                <div class="feature-box" onclick="fetchAllFirebaseKeys()">
+                    <i class="fa-solid fa-list-check"></i>
+                    <div class="feature-info">
+                        <h4>Show DB Keys</h4>
+                        <p>Fetch live userinfo</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="triggerModule('Key Authenticator', 'Token validation check passed.')">
+                    <i class="fa-solid fa-certificate"></i>
+                    <div class="feature-info">
+                        <h4>Verify Key</h4>
+                        <p>Check token schema</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="showDeviceLockInfo()">
+                    <i class="fa-solid fa-fingerprint"></i>
+                    <div class="feature-info">
+                        <h4>HWID Lock</h4>
+                        <p>Hardware binding</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="triggerModule('Anti-Ban Bypass', 'Game security hooks injected.')">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <div class="feature-info">
+                        <h4>Bypass Shield</h4>
+                        <p>Anti-cheat protection</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="triggerModule('Network Optimizer', 'Socket buffer scaled for low latency.')">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <div class="feature-info">
+                        <h4>Network Boost</h4>
+                        <p>Zero-lag routing</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="triggerModule('Proxy Tunnel', 'SOCKS5 proxy bindings verified.')">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <div class="feature-info">
+                        <h4>Proxy Tunnel</h4>
+                        <p>Active routing</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="updateExistingKey()">
+                    <i class="fa-solid fa-rotate"></i>
+                    <div class="feature-info">
+                        <h4>Refresh Token</h4>
+                        <p>Update timestamp</p>
+                    </div>
+                </div>
+                <div class="feature-box" onclick="clearSavedKeyStorage()">
+                    <i class="fa-solid fa-database"></i>
+                    <div class="feature-info">
+                        <h4>Wipe Cache</h4>
+                        <p>Clear local storage</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hacker Terminal Log Box -->
+        <div class="terminal-container">
+            <div class="terminal-header-bar">
+                <div class="terminal-dots">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                </div>
+                <span>NXL_OFC_KERNEL_LOG v5.0</span>
+                <span>[LIVE]</span>
+            </div>
+            <div class="terminal-logs" id="terminal-logs">
+                <div class="log-line">[SYSTEM] Welcome Professor! Audio & Animation active.</div>
+                <div class="log-line success">[OK] Connected to Firebase userinfo DB.</div>
+            </div>
+        </div>
+
+        <!-- Security Log Status Bar -->
+        <div class="security-footer-bar">
+            <div class="sec-status">
+                <i class="fa-solid fa-circle"></i> SECURITY: SECURE
+            </div>
+            <div style="color: rgba(255,255,255,0.6);" id="ip-display">IP: 102.218.xx.xx</div>
+        </div>
+
+        <!-- Copyright Notice -->
+        <div class="copyright-tag">Copyright Reserved by @NxlAbu</div>
+    </div>
+
+    <!-- Play-Store / App Style Slide Menu Drawer -->
+    <div class="app-menu-drawer" id="appMenuDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <i class="fa-solid fa-compass"></i> NXL OFC HUB
+            </div>
+            <div class="close-drawer-btn" onclick="toggleAppMenu()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <div class="drawer-content">
+            <div class="menu-card" onclick="toggleAppMenu(); fetchAllFirebaseKeys();">
+                <i class="fa-solid fa-key"></i>
+                <div class="menu-card-info">
+                    <h4>Fetch All Active Keys</h4>
+                    <p>Inspect database records in popup modal</p>
+                </div>
+            </div>
+            <a href="https://t.me/NXL_TEAMV1" target="_blank" class="menu-card">
+                <i class="fab fa-telegram"></i>
+                <div class="menu-card-info">
+                    <h4>Official Telegram Channel</h4>
+                    <p>Join @NXL_TEAMV1 for updates & support</p>
+                </div>
+            </a>
+            <div class="menu-card" onclick="showDeveloperInfo()">
+                <i class="fa-solid fa-code"></i>
+                <div class="menu-card-info">
+                    <h4>Developer Information</h4>
+                    <p>Created by @NxlAbu | Mobile Security Programmer</p>
+                </div>
+            </div>
+            <div class="menu-card" onclick="toggleAppMenu(); resetKeySession();">
+                <i class="fa-solid fa-trash-can"></i>
+                <div class="menu-card-info">
+                    <h4>Reset Active Session</h4>
+                    <p>Clear stored local tokens</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sound Toggle Floating Button -->
+    <div class="sound-toggle-btn" id="soundToggleBtn" onclick="toggleAudio()" title="Toggle Sound">
+        <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+    </div>
+
+    <!-- Modal Notification Popup -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <i class="fa-solid fa-key" id="modalIcon"></i>
+            <h3 id="modalTitle">Access Key Generated</h3>
+            <p id="modalMessage">NXL-OFC-3904-VIP-540</p>
+            <div class="modal-btn-group">
+                <button class="modal-btn" onclick="copyKeyText()">COPY KEY</button>
+                <button class="modal-btn secondary" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Music Audio -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://github.com/akxabu-code/ALL-FILE-/raw/main/Dj%20Samir%20-%20MONTAGEM%20DANZA%20(Super%20Slowed).mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- Splash Screen & Auto Audio Init ---
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.classList.add('fade-out');
+            }, 1800);
+
+            // Auto-play music on load
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.play().then(() => {
+                logToTerminal('Background audio stream active.', 'success');
+            }).catch(e => {
+                logToTerminal('Tap anywhere to unlock audio stream.', 'warn');
+            });
+        });
+
+        // Tap fallback to start audio if browser blocks autoplay
+        ['click', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, () => {
+                const bgMusic = document.getElementById('bgMusic');
+                if (bgMusic.paused && !isMuted) {
+                    bgMusic.play().catch(e => {});
+                }
+            }, { once: true });
+        });
+
+        let audioCtx = null;
+        function playBeep(freq, type, duration) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        const FIREBASE_DB_URL = "https://fixhtml-90816-default-rtdb.firebaseio.com/";
+
+        function toggleAppMenu() {
+            playBeep(600, 'sine', 0.05);
+            const drawer = document.getElementById('appMenuDrawer');
+            drawer.classList.toggle('open');
+        }
+
+        function showDeveloperInfo() {
+            toggleAppMenu();
+            showModal('Developer Information', 'Brand: NXL OFC\nLead Programmer: @NxlAbu\nSpecialization: Android Security & Proxy Tools\nChannel: @NXL_TEAMV1');
+        }
+
+        function switchPage(pageName) {
+            playBeep(500, 'sine', 0.05);
+            const genPage = document.getElementById('pageGenerator');
+            const toolsPage = document.getElementById('pageTools');
+            const tabGen = document.getElementById('tabGenerator');
+            const tabTools = document.getElementById('tabTools');
+
+            if (pageName === 'generator') {
+                genPage.classList.add('active');
+                toolsPage.classList.remove('active');
+                tabGen.classList.add('active');
+                tabTools.classList.remove('active');
+                logToTerminal('Switched to Key Generator.');
+            } else {
+                toolsPage.classList.add('active');
+                genPage.classList.remove('active');
+                tabTools.classList.add('active');
+                tabGen.classList.remove('active');
+                logToTerminal('Switched to Pro Tools Suite.');
+            }
+        }
+
+        // --- 3D Background Simulation ---
+        const canvas = document.getElementById('bg-canvas');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030307, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const dropCount = 1200;
+        const dropGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(dropCount * 3);
+        const velocities = new Float32Array(dropCount);
+
+        for(let i = 0; i < dropCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 90;
+            positions[i+1] = Math.random() * 70 - 25;
+            positions[i+2] = (Math.random() - 0.5) * 80;
+            velocities[i/3] = 0.35 + Math.random() * 0.5;
+        }
+
+        dropGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const dropMat = new THREE.PointsMaterial({
+            size: 0.3,
+            color: 0xff3399,
+            transparent: true,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending
+        });
+
+        const waterRainSystem = new THREE.Points(dropGeo, dropMat);
+        scene.add(waterRainSystem);
+        camera.position.set(0, 10, 35);
+        camera.lookAt(0, 0, 0);
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const posArr = dropGeo.attributes.position.array;
+            for(let i = 0; i < dropCount; i++) {
+                let i3 = i * 3;
+                posArr[i3 + 1] -= velocities[i];
+                if(posArr[i3 + 1] < -25) {
+                    posArr[i3 + 1] = 45;
+                    posArr[i3] = (Math.random() - 0.5) * 90;
+                    posArr[i3 + 2] = (Math.random() - 0.5) * 80;
+                }
+            }
+            dropGeo.attributes.position.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        let currentServer = 'Server 1';
+        const terminalLogs = document.getElementById('terminal-logs');
+
+        function logToTerminal(text, type = '') {
+            const div = document.createElement('div');
+            div.className = `log-line ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            terminalLogs.appendChild(div);
+            terminalLogs.scrollTop = terminalLogs.scrollHeight;
+        }
+
+        function selectServer(el, name) {
+            document.querySelectorAll('.server-card').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            currentServer = name;
+            playBeep(440, 'sine', 0.05);
+            logToTerminal(`Switched routing node to ${name}`, 'warn');
+        }
+
+        function triggerModule(moduleName, actionDesc) {
+            playBeep(580, 'triangle', 0.08);
+            logToTerminal(`Executing module: ${moduleName}...`);
+            setTimeout(() => {
+                logToTerminal(`[SUCCESS] ${actionDesc}`, 'success');
+            }, 500);
+        }
+
+        // --- Fetch Keys from userinfo Node ---
+        async function fetchAllFirebaseKeys() {
+            playBeep(520, 'sine', 0.1);
+            logToTerminal('Fetching records from userinfo DB...');
+            try {
+                let response = await fetch(`${FIREBASE_DB_URL}userinfo.json`);
+                let data = await response.json();
+                
+                if (!data) {
+                    showModal('Database Records', 'No keys found in userinfo database.');
+                    return;
+                }
+
+                const keysArray = Object.entries(data);
+                let formattedList = `Total Keys in userinfo: ${keysArray.length}\n\n`;
+                const now = Date.now();
+                keysArray.forEach(([key, record], index) => {
+                    const createdAt = Number(record?.createdAt || 0);
+                    const expiresAt = createdAt ? createdAt + (24 * 60 * 60 * 1000) : 0;
+                    const expired = expiresAt ? now >= expiresAt : false;
+                    const deviceId = record?.deviceId || record?.device;
+                    const deviceState = deviceId && deviceId !== 'null' ? 'BOUND' : 'NOT YET BOUND';
+                    const state = record?.status === 'revoked' ? 'REVOKED' : (expired ? 'EXPIRED' : (record?.status || 'UNKNOWN').toUpperCase());
+                    formattedList += `${index + 1}. ${key}\n   Status: ${state}\n   Device: ${deviceState}\n`;
+                    if (createdAt) formattedList += `   Created: ${new Date(createdAt).toLocaleString()}\n   Expires: ${new Date(expiresAt).toLocaleString()}\n`;
+                    formattedList += `\n`;
+                });
+
+                showModal('userinfo Key Records', formattedList);
+                logToTerminal(`[SUCCESS] Loaded ${keysArray.length} key records from userinfo.`, 'success');
+            } catch (err) {
+                logToTerminal('[ERROR] Failed to reach Firebase database.', 'error');
+                showModal('Connection Error', 'Could not reach Firebase Realtime Database.');
+            }
+        }
+
+        // --- Generate a 24-hour key record in the existing userinfo node ---
+        async function startKeyGeneration() {
+            const btn = document.getElementById('generateBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressText = document.getElementById('progressText');
+            const randomPart1 = Math.floor(1000 + Math.random() * 9000);
+            const randomPart2 = Math.floor(100 + Math.random() * 900);
+            const finalKey = `NXL-OFC-${randomPart1}-VIP-${randomPart2}`;
+
+            btn.disabled = true;
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressText.textContent = 'CREATING 24-HOUR DEVICE-LOCK KEY...';
+            logToTerminal(`Registering 24-hour key: ${finalKey}`, 'warn');
+            playBeep(300, 'sawtooth', 0.15);
+
+            let progress = 0;
+            const timer = setInterval(() => {
+                progress = Math.min(progress + 25, 100);
+                progressFill.style.width = progress + '%';
+                progressPercent.textContent = progress + '%';
+                if (progress >= 100) clearInterval(timer);
+            }, 80);
+
+            try {
+                const keyPayload = {
+                    password: finalKey,
+                    status: 'active',
+                    access: '1',
+                    device: null,
+                    deviceId: null,
+                    deviceLocked: false,
+                    activatedAt: null,
+                    createdAt: { '.sv': 'timestamp' },
+                    expiryHours: 24,
+                    validity: '24 hours from key creation',
+                    rgtime: new Date().toISOString()
+                };
+                const response = await fetch(`${FIREBASE_DB_URL}userinfo/${encodeURIComponent(finalKey)}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(keyPayload)
+                });
+                if (!response.ok) throw new Error(`Firebase HTTP ${response.status}`);
+                const savedRecord = await response.json();
+                if (!savedRecord || !savedRecord.createdAt) throw new Error('Firebase did not confirm the saved record');
+                logToTerminal('[SUCCESS] 24-hour key saved; waiting for first APK device activation.', 'success');
+                showModal('24-Hour Device-Lock Key Created', `${finalKey}\n\nExpires: 24 hours after creation\nDevice: Not yet bound\n\nThe APK must bind the first device and enforce expiry using Firebase server time.`);
+            } catch (e) {
+                logToTerminal(`[ERROR] Key creation failed: ${e.message}`, 'error');
+                showModal('Key Creation Failed', `Firebase did not confirm the key was saved.\n${e.message}`);
+            } finally {
+                clearInterval(timer);
+                progressContainer.style.display = 'none';
+                btn.disabled = false;
+                playBeep(880, 'sine', 0.3);
+            }
+        }
+
+        function showDeviceLockInfo() {
+            playBeep(580, 'triangle', 0.08);
+            showModal('Device Lock Integration', 'New keys start with deviceId=null. The APK must atomically claim the key on first activation, save its stable app-install device ID, and reject a different device ID. The website alone cannot enforce login security inside a separate APK.');
+        }
+
+        function updateExistingKey() {
+            playBeep(650, 'square', 0.1);
+            logToTerminal('This demo control does not update Firebase.', 'warn');
+            showModal('Not Connected', 'This control is a UI placeholder and does not refresh a Firebase token.');
+        }
+
+        function clearSavedKeyStorage() {
+            playBeep(250, 'sawtooth', 0.15);
+            localStorage.clear();
+            logToTerminal('Local cache wiped.', 'error');
+            showModal('Storage Cleared', 'Local cache wiped successfully.');
+        }
+
+        function resetKeySession() {
+            playBeep(200, 'sawtooth', 0.2);
+            logToTerminal('This demo control does not revoke a Firebase key.', 'warn');
+            showModal('Not Connected', 'This control is a UI placeholder. Revoke keys through a secured admin backend or Firebase Console.');
+        }
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalMessage = document.getElementById('modalMessage');
+
+        function showModal(title, message) {
+            document.getElementById('modalTitle').textContent = title;
+            modalMessage.textContent = message;
+            modalOverlay.classList.add('show');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('show');
+        }
+
+        function copyKeyText() {
+            navigator.clipboard.writeText(modalMessage.textContent);
+            const btn = document.querySelector('.modal-btn');
+            btn.textContent = 'COPIED!';
+            playBeep(750, 'sine', 0.1);
+            setTimeout(() => {
+                btn.textContent = 'COPY KEY';
+                closeModal();
+            }, 1000);
+        }
+
+        const bgMusic = document.getElementById('bgMusic');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        let isMuted = false;
+        bgMusic.volume = 0.8;
+
+        function toggleAudio() {
+            if (isMuted) {
+                bgMusic.play();
+                soundToggleBtn.classList.remove('muted');
+                soundIcon.className = 'fa-solid fa-volume-high';
+                isMuted = false;
+                logToTerminal('Audio unmuted.', 'success');
+            } else {
+                bgMusic.pause();
+                soundToggleBtn.classList.add('muted');
+                soundIcon.className = 'fa-solid fa-volume-xmark';
+                isMuted = true;
+                logToTerminal('Audio muted by user.', 'warn');
+            }
+        }
+    </script>
+</body>
+</html>
